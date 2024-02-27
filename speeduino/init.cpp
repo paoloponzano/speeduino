@@ -2137,12 +2137,13 @@ void setPinMapping(byte boardID)
       pinTrigger3 = 3; //The Cam sensor 2 pin
       pinFlex = 20; // Flex sensor
       pinTPS = A3; //TPS input pin
-      pinMAP = A0; //MAP sensor pin
+      //pinMAP = A0; //MAP sensor pin
+      pinMAP = A9; //MAP sensor pin
       pinBaro = A7; //Baro sensor pin
       pinIAT = A5; //IAT sensor pin
       pinCLT = A4; //CLS sensor pin
       pinO2 = A1; //O2 Sensor pin
-      pinO2_2 = A9; //O2 sensor pin (second sensor)
+      //pinO2_2 = A9; //O2 sensor pin (second sensor)
       pinBat = A2; //Battery reference voltage pin
       pinSpareTemp1 = A8; //spare Analog input 1
       pinLaunch = 37; //Can be overwritten below

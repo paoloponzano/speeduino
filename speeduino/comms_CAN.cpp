@@ -17,11 +17,10 @@ CAN_message_t inMsg;
 CAN_message_t outMsg;
 
 //These are declared locally for Teensy due to this issue: https://github.com/tonton81/FlexCAN_T4/issues/67
-#if defined(CORE_TEENSY35)         // use for Teensy 3.5 only 
+#if defined(CORE_TEENSY35) || defined(CORE_TEENSY36)        // use for Teensy 3.5/3.6 only 
   FlexCAN_T4<CAN0, RX_SIZE_256, TX_SIZE_16> Can0;
-#elif defined(CORE_TEENSY41)         // use for Teensy 3.6 only
-  FlexCAN_T4<CAN0, RX_SIZE_256, TX_SIZE_16> Can0;
-  FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1; 
+#elif defined(CORE_TEENSY41)         // use for Teensy 4.1 only
+  FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can0; 
 #endif
 
 // Forward declare
@@ -142,7 +141,7 @@ void DashMessage(uint16_t DashMessageID)
       uint8_t temp_TPS;
       uint8_t temp_BARO;
       uint16_t temp_CLT;
-      temp_TPS = map(currentStatus.TPS, 0, 100, 0, 254);//TPS value conversion (from 0x00 to 0xFE)
+      temp_TPS = map(currentStatus.TPS, 0, 200, 1, 254);//TPS value conversion (from 0x01 to 0xFE)
       temp_CLT = (((currentStatus.coolant - CALIBRATION_TEMPERATURE_OFFSET) + 48)*4/3); //CLT conversion (actual value to add is 48.373, but close enough)
       if (temp_CLT > 255) { temp_CLT = 255; } //CLT conversion can yield to higher values than what fits to byte, so limit the maximum value to 255.
       temp_BARO = currentStatus.baro;
@@ -364,7 +363,7 @@ void obd_response(uint8_t PIDmode, uint8_t requestedPIDlow, uint8_t requestedPID
         // TPS percentage, range is 0 to 100 percent, formula == 100/256 A 
         uint16_t temp_tpsPC;
         temp_tpsPC = currentStatus.TPS;
-        obdcalcA = (temp_tpsPC <<8) / 100;     // (tpsPC *256) /100;
+        obdcalcA = (temp_tpsPC <<8) / 200;     // (tpsPC *256) /200;
         if (obdcalcA > 255){ obdcalcA = 255;}
         outMsg.buf[0] =  0x03;                    // sending 3 bytes
         outMsg.buf[1] =  0x41;                    // Same as query, except that 40h is added to the mode value. So:41h = show current data ,42h = freeze frame ,etc.

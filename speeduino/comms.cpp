@@ -31,7 +31,7 @@ A full copy of the license may be found in the projects root directory
 
 // Forward declarations
 
-/** @brief Processes a message once it has been fully recieved */
+/** @brief Processes a message once it has been fully received */
 void processSerialCommand(void);
 
 /** @brief Should be called when ::serialStatusFlag == SERIAL_TRANSMIT_TOOTH_INPROGRESS, */
@@ -57,6 +57,8 @@ void sendCompositeLog(void);
 
 #define SEND_OUTPUT_CHANNELS 48U
 
+#define COMMS_SD            defined(RTC_ENABLED) && defined(SD_LOGGING)
+
 //!@{
 /** @brief Hard coded response for some TS messages.
  * @attention Stored in flash (.text segment) and loaded on demand.
@@ -79,7 +81,7 @@ static uint16_t serialBytesRxTx = 0;
 static uint32_t serialReceiveStartTime = 0; //!< The time at which the serial receive started. Used for calculating whether a timeout has occurred */
 static FastCRC32 CRC32_serial; //!< Support accumulation of a CRC during non-blocking operations */
 using crc_t = uint32_t;
-#ifdef RTC_ENABLED
+#if COMMS_SD
 #undef SERIAL_BUFFER_SIZE
 /** @brief Serial payload buffer must be significantly larger for boards that support SD logging.
  * 
@@ -104,7 +106,7 @@ static inline bool isTimeout(void) {
   return (millis() - serialReceiveStartTime) > SERIAL_TIMEOUT;
 }
 
-// ====================================== Endianess Support =============================
+// ====================================== Endianness Support =============================
 
 /**
  * @brief      Flush all remaining bytes from the rx serial buffer
@@ -392,7 +394,7 @@ static void loadO2CalibrationChunk(uint16_t offset, uint16_t chunkSize)
 }
 
 /**
- * @brief Convert 2 bytes into an offset temperature in degrees Celcius
+ * @brief Convert 2 bytes into an offset temperature in degrees Celsius
  * @attention Returned value will be offset CALIBRATION_TEMPERATURE_OFFSET
  */
 static uint16_t toTemperature(byte lo, byte hi)
@@ -438,7 +440,7 @@ static void processTemperatureCalibrationTableUpdate(uint16_t calibrationLength,
 /** Processes the incoming data on the serial buffer based on the command sent.
 Can be either data for a new command or a continuation of data for command that is already in progress:
 
-Comands are single byte (letter symbol) commands.
+Commands are single byte (letter symbol) commands.
 */
 void serialReceive(void)
 {
@@ -716,7 +718,7 @@ void processSerialCommand(void)
       uint8_t cmd = serialPayload[2];
       uint16_t offset = word(serialPayload[4], serialPayload[3]);
       uint16_t length = word(serialPayload[6], serialPayload[5]);
-#ifdef RTC_ENABLED      
+#if COMMS_SD     
       uint16_t SD_arg1 = word(serialPayload[3], serialPayload[4]);
       uint16_t SD_arg2 = word(serialPayload[5], serialPayload[6]);
 #endif
@@ -732,7 +734,7 @@ void processSerialCommand(void)
         (void)memcpy_P(serialPayload, codeVersion, sizeof(codeVersion) );
         sendSerialPayloadNonBlocking(sizeof(codeVersion));
       }
-#ifdef RTC_ENABLED
+#if COMMS_SD
       else if(cmd == SD_RTC_PAGE) //Request to read SD card RTC
       {
         serialPayload[0] = SERIAL_RC_OK;
@@ -914,7 +916,7 @@ void processSerialCommand(void)
 
     case 'w':
     {
-#ifdef RTC_ENABLED
+#if COMMS_SD
       uint8_t cmd = serialPayload[2];
       uint16_t SD_arg1 = word(serialPayload[3], serialPayload[4]);
       uint16_t SD_arg2 = word(serialPayload[5], serialPayload[6]);
